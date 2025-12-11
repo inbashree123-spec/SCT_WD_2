@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LilacTime – Nude Purple Stopwatch</title>
+
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #E9D7F1, #D8C4E0, #CBB9D5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title {
+      font-size: 2.8rem;
+      margin-bottom: 25px;
+      color: #6F4E78;
+      letter-spacing: 2px;
+    }
+
+    .stopwatch-container {
+      width: 340px;
+      padding: 25px;
+      border-radius: 25px;
+      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.23);
+      box-shadow: 0 8px 25px rgba(111, 78, 120, 0.2);
+      text-align: center;
+    }
+
+    .circle {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin: auto;
+    }
+
+    svg circle {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+    }
+
+    svg circle:first-child {
+      stroke: rgba(255, 255, 255, 0.4);
+    }
+
+    svg circle#progress {
+      stroke: #A37EBF;
+      stroke-dasharray: 628;
+      stroke-dashoffset: 628;
+      transition: stroke-dashoffset 0.3s linear;
+    }
+
+    .time-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      font-weight: 600;
+      color: #6F4E78;
+    }
+
+    .controls {
+      margin-top: 25px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 10px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 4px 10px rgba(111, 78, 120, 0.2);
+      color: #6F4E78;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      backdrop-filter: blur(5px);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .lap-list {
+      margin-top: 20px;
+      max-height: 180px;
+      overflow-y: auto;
+      list-style: none;
+      color: #6F4E78;
+      padding: 10px;
+      font-size: 1rem;
+      text-align: left;
+    }
+</style>
+
+</head>
+<body>
+
+<h1 class="title">LilacTime</h1>
+
+<div class="stopwatch-container">
+
+    <div class="circle">
+        <svg width="220" height="220">
+            <circle cx="110" cy="110" r="100"></circle>
+            <circle id="progress" cx="110" cy="110" r="100"></circle>
+        </svg>
+        <div class="time-display" id="display">00:00:00</div>
+    </div>
+
+    <div class="controls">
+        <button id="start" class="btn">Start</button>
+        <button id="pause" class="btn">Pause</button>
+        <button id="reset" class="btn">Reset</button>
+        <button id="lap" class="btn">Lap</button>
+        <button id="download" class="btn">Download</button>
+    </div>
+
+    <ul id="laps" class="lap-list"></ul>
+</div>
+
+<script>
+    let timer;
+    let running = false;
+    let seconds = 0;
+    let laps = [];
+
+    const display = document.getElementById("display");
+    const progress = document.getElementById("progress");
+    const lapList = document.getElementById("laps");
+
+    function updateDisplay() {
+        let hrs = String(Math.floor(seconds / 3600)).padStart(2, "0");
+        let mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+        let secs = String(seconds % 60).padStart(2, "0");
+        display.textContent = `${hrs}:${mins}:${secs}`;
+
+        let offset = 628 - (seconds % 60) * (628 / 60);
+        progress.style.strokeDashoffset = offset;
+    }
+
+    document.getElementById("start").onclick = () => {
+        if (!running) {
+            running = true;
+            timer = setInterval(() => {
+                seconds++;
+                updateDisplay();
+            }, 1000);
+        }
+    };
+
+    document.getElementById("pause").onclick = () => {
+        running = false;
+        clearInterval(timer);
+    };
+
+    document.getElementById("reset").onclick = () => {
+        running = false;
+        clearInterval(timer);
+        seconds = 0;
+        updateDisplay();
+        lapList.innerHTML = "";
+        laps = [];
+    };
+
+    document.getElementById("lap").onclick = () => {
+        if (!running) return;
+
+        let hrs = String(Math.floor(seconds / 3600)).padStart(2, "0");
+        let mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+        let secs = String(seconds % 60).padStart(2, "0");
+
+        let lapTime = `${hrs}:${mins}:${secs}`;
+        laps.push(lapTime);
+
+        let li = document.createElement("li");
+        li.textContent = `Lap ${laps.length} → ${lapTime}`;
+        lapList.appendChild(li);
+    };
+
+    document.getElementById("download").onclick = () => {
+        if (laps.length === 0) return;
+
+        let content = laps.join("\n");
+        let blob = new Blob([content], { type: "text/plain" });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "LilacTime_Laps.txt";
+        link.click();
+    };
+</script>
+
+</body>
+</html>
